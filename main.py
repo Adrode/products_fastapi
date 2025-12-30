@@ -8,15 +8,17 @@ class ProductCategory(str, Enum):
   vegetables = "vegetables"
   fruits = "fruits"
 
-class ProductAvailability(bool, Enum):
-  available = True
-  not_available = False
+class CreateProduct(BaseModel):
+  category: ProductCategory
+  name: str
+  available: bool
+  stock: int
 
 class Product(BaseModel):
   id: int
   category: ProductCategory
   name: str
-  available: ProductAvailability
+  available: bool
   stock: int
 
 products = [
@@ -107,9 +109,19 @@ products = [
 ]
 
 @api.post("/products")
-def post_product(product: Product):
-  task_id = max([item["id"] for item in products]) + 1 if products else 1
-  return task_id
+def post_product(product: CreateProduct):
+  product_id = max([item["id"] for item in products]) + 1 if products else 1
+  
+  new_product = {
+    "id": product_id,
+    "category": product.category,
+    "name": product.name,
+    "available": product.available,
+    "stock": product.stock
+  }
+
+  products.append(new_product)
+  return new_product
 
 @api.get("/products/all")
 def get_all_products():

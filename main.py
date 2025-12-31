@@ -1,6 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from enum import Enum
+
+class NotFoundError(Exception):
+  def __init__(self, id: str):
+    self.id = id
 
 api = FastAPI()
 
@@ -107,6 +112,13 @@ products = [
   },
 ]
 
+@api.exception_handler(NotFoundError)
+def not_found_error_handler(request: Request, exc: NotFoundError):
+  return JSONResponse(
+    status_code=404,
+    content={"message": f"Product with ID: {exc.id} not found!"}
+  )
+
 @api.post("/products")
 def post_product(product: CreateProduct):
   product_id = max([item["id"] for item in products]) + 1 if products else 1
@@ -132,19 +144,22 @@ def put_product_stock(id: int, new_stock: int):
       elif new_stock > 0:
         item["available"] = True
       return item
+  raise NotFoundError(id=id)
     
 @api.delete("/products/{id}/delete")
 def delete_product(id: int):
   for item in products:
     if item["id"] == id:
       products.remove(item)
-      return {"message": f"Deleted product with id: {id} - {item["name"]}"}
+      return {"message": f"Deleted product with ID: {id} - {item["name"]}"}
+  raise NotFoundError(id=id)
 
 @api.get("/products/{id}")
 def get_product(id: int):
   for item in products:
     if item["id"] == id:
       return item
+  raise NotFoundError(id=id)
     
 @api.get("/products")
 def get_all_products(category: ProductCategory | None = None):

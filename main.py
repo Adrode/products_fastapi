@@ -123,12 +123,14 @@ def post_product(product: CreateProduct):
   products.append(new_product)
   return new_product
 
-@api.get("/products/all")
-def get_all_products():
-  return products
-
 @api.get("/products/{id}")
 def get_product(id: int):
   for item in products:
     if item["id"] == id:
       return item
+    
+@api.get("/products")
+def get_all_products(category: ProductCategory | None = None):
+  if category:
+    return [item for item in products if item["category"] == category]
+  return products

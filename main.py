@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from enum import Enum
 
 class NotFoundError(Exception):
-  def __init__(self, id: str):
+  def __init__(self, id: int):
     self.id = id
 
 api = FastAPI()
@@ -12,6 +12,9 @@ api = FastAPI()
 class ProductCategory(str, Enum):
   vegetables = "vegetables"
   fruits = "fruits"
+
+class PatchStock(BaseModel):
+  stock: int
 
 class CreateProduct(BaseModel):
   category: ProductCategory
@@ -127,26 +130,34 @@ def post_product(product: CreateProduct):
     "id": product_id,
     "category": product.category,
     "name": product.name,
-    "available": True if product.stock else False, 
+    "available": product.stock > 0, 
     "stock": product.stock
   }
 
   products.append(new_product)
   return new_product
 
-@api.put("/products/{id}/stock")
-def put_product_stock(id: int, new_stock: int):
+@api.put("/products/{id}")
+def put_product(id: int, product: CreateProduct):
   for item in products:
     if item["id"] == id:
-      item["stock"] = new_stock
-      if new_stock == 0:
-        item["available"] = False
-      elif new_stock > 0:
-        item["available"] = True
+      item["category"] = product.category
+      item["name"] = product.name
+      item["stock"] = product.stock
+      item["available"] = product.stock > 0
+      return item
+  raise NotFoundError(id=id)
+
+@api.patch("/products/{id}/stock")
+def patch_product_stock(id: int, update: PatchStock):
+  for item in products:
+    if item["id"] == id:
+      item["stock"] = update.stock
+      item["available"] = update.stock > 0
       return item
   raise NotFoundError(id=id)
     
-@api.delete("/products/{id}/delete")
+@api.delete("/products/{id}")
 def delete_product(id: int):
   for item in products:
     if item["id"] == id:

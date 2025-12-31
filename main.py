@@ -11,7 +11,6 @@ class ProductCategory(str, Enum):
 class CreateProduct(BaseModel):
   category: ProductCategory
   name: str
-  available: bool
   stock: int
 
 class Product(BaseModel):
@@ -116,7 +115,7 @@ def post_product(product: CreateProduct):
     "id": product_id,
     "category": product.category,
     "name": product.name,
-    "available": product.available,
+    "available": True if product.stock else False, 
     "stock": product.stock
   }
 

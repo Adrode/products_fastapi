@@ -132,6 +132,13 @@ def put_product_stock(id: int, new_stock: int):
       elif new_stock > 0:
         item["available"] = True
       return item
+    
+@api.delete("/products/{id}/delete")
+def delete_product(id: int):
+  for item in products:
+    if item["id"] == id:
+      products.remove(item)
+      return {"message": f"Deleted product with id: {id} - {item["name"]}"}
 
 @api.get("/products/{id}")
 def get_product(id: int):

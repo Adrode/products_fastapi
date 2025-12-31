@@ -122,6 +122,17 @@ def post_product(product: CreateProduct):
   products.append(new_product)
   return new_product
 
+@api.put("/products/{id}/stock")
+def put_product_stock(id: int, new_stock: int):
+  for item in products:
+    if item["id"] == id:
+      item["stock"] = new_stock
+      if new_stock == 0:
+        item["available"] = False
+      elif new_stock > 0:
+        item["available"] = True
+      return item
+
 @api.get("/products/{id}")
 def get_product(id: int):
   for item in products:
